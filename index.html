@@ -297,15 +297,21 @@
         <!-- NEW: Game Center Section -->
         <section class="mt-16 text-center">
             <div id="game-selection-section">
-            <h2 class="section-title mb-10 text-purple-400">Tanssi Game Center</h2>
-            <div class="flex justify-center">
-                <!-- Memory Game Card -->
-                <div class="card p-8 rounded-2xl flex flex-col items-center justify-center text-center border-yellow-500/30 hover:border-yellow-500 transition-all duration-300">
-                <h3 class="text-3xl font-bold text-yellow-400 mb-3">Memory Game</h3>
-                <p class="text-slate-300 mb-6">Test your memory by finding all the matching card pairs.</p>
-                <button id="play-memory-game-btn" class="bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold py-3 px-8 rounded-full transition-transform transform hover:scale-105 shadow-lg">Play Now</button>
+                <h2 class="section-title mb-10 text-purple-400">Tanssi Game Center</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                    <!-- Memory Game Card -->
+                    <div class="card p-8 rounded-2xl flex flex-col items-center justify-center text-center border-yellow-500/30 hover:border-yellow-500 transition-all duration-300">
+                        <h3 class="text-3xl font-bold text-yellow-400 mb-3">Memory Game</h3>
+                        <p class="text-slate-300 mb-6">Test your memory by finding all the matching card pairs.</p>
+                        <button id="play-memory-game-btn" class="bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold py-3 px-8 rounded-full transition-transform transform hover:scale-105 shadow-lg">Play Now</button>
+                    </div>
+                    <!-- Quiz Game Card -->
+                    <div class="card p-8 rounded-2xl flex flex-col items-center justify-center text-center border-cyan-500/30 hover:border-cyan-500 transition-all duration-300">
+                        <h3 class="text-3xl font-bold text-cyan-400 mb-3">Speed Quiz</h3>
+                        <p class="text-slate-300 mb-6">How well do you know Tanssi? Take this timed quiz!</p>
+                        <button id="play-quiz-game-btn" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-full transition-transform transform hover:scale-105 shadow-lg">Play Now</button>
+                    </div>
                 </div>
-            </div>
             </div>
 
             <!-- Memory Game Container -->
@@ -327,6 +333,33 @@
                         <p>You've Ready For Journey To Mainnet</p>
                     </div>
                     <button class="back-to-selection-btn mt-6 text-slate-400 hover:text-white">← Back to Game Selection</button>
+                </div>
+            </div>
+            
+            <!-- Quiz Game Container -->
+            <div id="quiz-game-section" class="hidden">
+                <h2 class="section-title mb-10 text-cyan-400">Tanssi Speed Quiz</h2>
+                <div id="quiz-container" class="max-w-2xl mx-auto p-6 md:p-8 bg-slate-800/50 rounded-2xl border border-slate-700 text-left">
+                    <div id="quiz-start-screen">
+                        <h3 class="text-2xl font-bold text-white mb-4">Test Your Appchain Knowledge!</h3>
+                        <p class="text-slate-300 mb-6">Answer 10 questions as quickly as you can and see how much you know about Tanssi.</p>
+                        <button id="start-quiz-btn" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-full transition-transform transform hover:scale-105 shadow-lg">Start Quiz</button>
+                    </div>
+                    <div id="quiz-game-screen" class="hidden">
+                        <div class="flex justify-between items-center mb-4">
+                            <div id="question-counter" class="text-slate-400"></div>
+                            <div id="timer" class="text-xl font-bold text-cyan-400"></div>
+                        </div>
+                        <div id="question-text" class="text-xl md:text-2xl font-semibold text-white mb-6 min-h-[80px]"></div>
+                        <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    </div>
+                    <div id="quiz-end-screen" class="hidden text-center">
+                        <h3 class="text-3xl font-bold text-white mb-2">Quiz Complete!</h3>
+                        <p>You've Ready For Journey To Mainnet</p>
+                        <p id="score-text" class="text-xl text-slate-300 mb-6"></p>
+                        <button id="restart-quiz-btn" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-full transition-transform transform hover:scale-105 shadow-lg">Try Again</button>
+                    </div>
+                    <button class="back-to-selection-btn mt-6 text-slate-400 hover:text-white text-center w-full">← Back to Game Selection</button>
                 </div>
             </div>
         </section>
@@ -405,15 +438,17 @@
             // --- Game Center Logic ---
             const gameSelectionSection = document.getElementById('game-selection-section');
             const memoryGameSection = document.getElementById('memory-game-section');
+            const quizGameSection = document.getElementById('quiz-game-section');
 
             const playMemoryBtn = document.getElementById('play-memory-game-btn');
+            const playQuizBtn = document.getElementById('play-quiz-game-btn');
             const backBtns = document.querySelectorAll('.back-to-selection-btn');
 
             playMemoryBtn.addEventListener('click', () => { gameSelectionSection.classList.add('hidden'); memoryGameSection.classList.remove('hidden'); initMemoryGame(); });
-
+            playQuizBtn.addEventListener('click', () => { gameSelectionSection.classList.add('hidden'); quizGameSection.classList.remove('hidden'); });
             backBtns.forEach(btn => {
                 btn.addEventListener('click', () => {
-                    memoryGameSection.classList.add('hidden'); 
+                    memoryGameSection.classList.add('hidden'); quizGameSection.classList.add('hidden'); 
                     gameSelectionSection.classList.remove('hidden');
                 });
             });
@@ -444,6 +479,42 @@
                 resetButton.addEventListener('click', restartGame); createBoard();
             }
 
+            // --- Quiz Game Logic ---
+            const quizContainer = document.getElementById('quiz-container');
+            if(quizContainer) {
+                const startScreen = document.getElementById('quiz-start-screen'); const gameScreen = document.getElementById('quiz-game-screen'); const endScreen = document.getElementById('quiz-end-screen'); const startBtn = document.getElementById('start-quiz-btn'); const restartBtn = document.getElementById('restart-quiz-btn'); const questionCounterEl = document.getElementById('question-counter'); const timerEl = document.getElementById('timer'); const questionTextEl = document.getElementById('question-text'); const answerButtonsEl = document.getElementById('answer-buttons'); const scoreTextEl = document.getElementById('score-text');
+                const quizQuestions = [
+                    { question: "How long does it take to deploy an appchain with Tanssi?", answers: [ { text: "Several months", correct: false }, { text: "Less than 1 hour", correct: true }, { text: "One week", correct: false }, { text: "Cannot be determined", correct: false } ] },
+                    { question: "From which ecosystem does Tanssi inherit its security?", answers: [ { text: "Ethereum", correct: false }, { text: "Solana", correct: false }, { text: "Bitcoin", correct: false }, { text: "Polkadot", correct: true } ] },
+                    { question: "What term does Tanssi use for its out-of-the-box appchains?", answers: [ { text: "Smart Contract", correct: false }, { text: "Sidechain", correct: false }, { text: "Containerized Appchain", correct: true }, { text: "Layer 2", correct: false } ] },
+                    { question: "Which of the following is NOT a problem of launching a traditional blockchain?", answers: [ { text: "High cost", correct: false }, { text: "Low initial security", correct: false }, { text: "Limited color options", correct: true }, { text: "Complex infrastructure", correct: false } ] },
+                    { question: "What is the main goal of the Tanssi protocol?", answers: [ { text: "To sell NFTs", correct: false }, { text: "To simplify appchain deployment", correct: true }, { text: "To create a new cryptocurrency", correct: false }, { text: "To be a social media platform", correct: false } ] },
+                    { question: "What is the primary benefit Tanssi offers to developers?", answers: [ { text: "Focus on their application", correct: true }, { text: "Mine cryptocurrencies", correct: false }, { text: "Design hardware", correct: false }, { text: "Create social media profiles", correct: false } ] },
+                    { question: "Tanssi significantly reduces both capital and what other type of expenses?", answers: [ { text: "Marketing expenses", correct: false }, { text: "Travel expenses", correct: false }, { text: "Operational expenses", correct: true }, { text: "Legal expenses", correct: false } ] },
+                    { question: "Which of the following is an 'out-of-the-box' service provided by Tanssi?", answers: [ { text: "Video editing software", correct: false }, { text: "Wallets and Indexers", correct: true }, { text: "A coffee machine", correct: false }, { text: "Office supplies", correct: false } ] },
+                    { question: "Tanssi allows developers to retain full what over their appchain?", answers: [ { text: "Debt", correct: false }, { text: "Problems", correct: false }, { text: "Sovereignty", correct: true }, { text: "Confusion", correct: false } ] },
+                    { question: "The Tanssi protocol is described as being what?", answers: [ { text: "Centralized", correct: false }, { text: "Complicated", correct: false }, { text: "Decentralized", correct: true }, { text: "Temporary", correct: false } ] }
+                ];
+                let currentQuestionIndex, score, timerInterval; const TIME_LIMIT = 15;
+                function startQuiz() { startScreen.classList.add('hidden'); endScreen.classList.add('hidden'); gameScreen.classList.remove('hidden'); currentQuestionIndex = 0; score = 0; showNextQuestion(); }
+                function showNextQuestion() {
+                    resetState();
+                    if (currentQuestionIndex < quizQuestions.length) {
+                        const question = quizQuestions[currentQuestionIndex]; questionCounterEl.textContent = `Question ${currentQuestionIndex + 1} / ${quizQuestions.length}`; questionTextEl.textContent = question.question;
+                        question.answers.forEach(answer => { const button = document.createElement('button'); button.textContent = answer.text; button.classList.add('answer-btn', 'w-full', 'p-4', 'bg-slate-700', 'hover:bg-slate-600', 'border', 'border-slate-600', 'rounded-lg', 'text-left'); if (answer.correct) { button.dataset.correct = true; } button.addEventListener('click', selectAnswer); answerButtonsEl.appendChild(button); });
+                        startTimer();
+                    } else { endQuiz(); }
+                }
+                function startTimer() { let timeLeft = TIME_LIMIT; timerEl.textContent = `${timeLeft}s`; timerInterval = setInterval(() => { timeLeft--; timerEl.textContent = `${timeLeft}s`; if (timeLeft <= 0) { clearInterval(timerInterval); endQuiz(true); } }, 1000); }
+                function resetState() { clearInterval(timerInterval); while (answerButtonsEl.firstChild) { answerButtonsEl.removeChild(answerButtonsEl.firstChild); } }
+                function selectAnswer(e) {
+                    clearInterval(timerInterval); const selectedBtn = e.target; if (selectedBtn.dataset.correct === 'true') { score++; }
+                    Array.from(answerButtonsEl.children).forEach(button => { if(button.dataset.correct) { button.classList.add('correct'); } else { button.classList.add('wrong'); } button.disabled = true; });
+                    setTimeout(() => { currentQuestionIndex++; showNextQuestion(); }, 1500);
+                }
+                function endQuiz(timedOut = false) { gameScreen.classList.add('hidden'); endScreen.classList.remove('hidden'); if (timedOut) { scoreTextEl.textContent = `Time's Up! Your score: ${score} out of ${quizQuestions.length}.`; }  else { scoreTextEl.textContent = `You answered ${score} out of ${quizQuestions.length} questions correctly!`; } }
+                startBtn.addEventListener('click', startQuiz); restartBtn.addEventListener('click', startQuiz);
+            }
 
         });
     </script>
