@@ -311,6 +311,12 @@
                         <p class="text-slate-300 mb-6">How well do you know Tanssi? Take this timed quiz!</p>
                         <button id="play-quiz-game-btn" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-full transition-transform transform hover:scale-105 shadow-lg">Play Now</button>
                     </div>
+                    <!-- Word Search Game Card -->
+                    <div class="card p-8 rounded-2xl flex flex-col items-center justify-center text-center border-green-500/30 hover:border-green-500 transition-all duration-300">
+                        <h3 class="text-3xl font-bold text-green-400 mb-3">Word Search</h3>
+                        <p class="text-slate-300 mb-6">Find the hidden blockchain keywords in the grid.</p>
+                        <button id="play-word-search-game-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full transition-transform transform hover:scale-105 shadow-lg">Play Now</button>
+                    </div>
                 </div>
             </div>
 
@@ -362,6 +368,23 @@
                     <button class="back-to-selection-btn mt-6 text-slate-400 hover:text-white text-center w-full">← Back to Game Selection</button>
                 </div>
             </div>
+
+            <!-- Word Search Game Container -->
+            <div id="word-search-section" class="hidden">
+                <h2 class="section-title mb-10 text-green-400">Tanssi Word Search</h2>
+               <div class="max-w-2xl mx-auto p-4 md:p-6 bg-slate-800/50 rounded-2xl border border-slate-700">
+                   <div class="flex justify-between items-center mb-6">
+                       <h3 class="text-xl font-bold text-white">Find the following words:</h3>
+                       <button id="restart-word-search-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full">Reset</button>
+                   </div>
+                   <div id="word-search-grid" class="mb-6"></div>
+                   <div id="word-list"></div>
+                   <div id="word-search-win-message" class="hidden mt-6 text-2xl font-bold text-yellow-400 bg-yellow-500/10 p-4 rounded-lg">
+                       Great! You found all the words!
+                   </div>
+                    <button class="back-to-selection-btn mt-6 text-slate-400 hover:text-white text-center w-full">← Back to Game Selection</button>
+               </div>
+           </div>
         </section>
 
         <section class="mt-16 mb-16">
@@ -439,16 +462,20 @@
             const gameSelectionSection = document.getElementById('game-selection-section');
             const memoryGameSection = document.getElementById('memory-game-section');
             const quizGameSection = document.getElementById('quiz-game-section');
+            const wordSearchGameSection = document.getElementById('word-search-section');
 
             const playMemoryBtn = document.getElementById('play-memory-game-btn');
             const playQuizBtn = document.getElementById('play-quiz-game-btn');
+            const playWordSearchBtn = document.getElementById('play-word-search-game-btn');
             const backBtns = document.querySelectorAll('.back-to-selection-btn');
 
             playMemoryBtn.addEventListener('click', () => { gameSelectionSection.classList.add('hidden'); memoryGameSection.classList.remove('hidden'); initMemoryGame(); });
             playQuizBtn.addEventListener('click', () => { gameSelectionSection.classList.add('hidden'); quizGameSection.classList.remove('hidden'); });
+            playWordSearchBtn.addEventListener('click', () => { gameSelectionSection.classList.add('hidden'); wordSearchGameSection.classList.remove('hidden'); initWordSearchGame(); });
+
             backBtns.forEach(btn => {
                 btn.addEventListener('click', () => {
-                    memoryGameSection.classList.add('hidden'); quizGameSection.classList.add('hidden'); 
+                    memoryGameSection.classList.add('hidden'); quizGameSection.classList.add('hidden'); wordSearchGameSection.classList.add('hidden');
                     gameSelectionSection.classList.remove('hidden');
                 });
             });
@@ -514,6 +541,103 @@
                 }
                 function endQuiz(timedOut = false) { gameScreen.classList.add('hidden'); endScreen.classList.remove('hidden'); if (timedOut) { scoreTextEl.textContent = `Time's Up! Your score: ${score} out of ${quizQuestions.length}.`; }  else { scoreTextEl.textContent = `You answered ${score} out of ${quizQuestions.length} questions correctly!`; } }
                 startBtn.addEventListener('click', startQuiz); restartBtn.addEventListener('click', startQuiz);
+            }
+
+            // --- Word Search Game Logic ---
+            const wordSearchContainer = document.getElementById('word-search-section');
+            function initWordSearchGame() {
+                if (!wordSearchContainer) return;
+                const gridEl = document.getElementById('word-search-grid');
+                const wordListEl = document.getElementById('word-list');
+                const winMessageEl = document.getElementById('word-search-win-message');
+                const restartBtn = document.getElementById('restart-word-search-btn');
+
+                const words = ['TANSSI','APPCHAIN', 'VALIDATOR', 'SECURITY', 'CONTAINER'];
+                const gridSize = 12;
+                let grid = [];
+                let foundWords = [];
+                let isSelecting = false;
+                let selection = [];
+
+                function generateGrid(wordsToPlace, size) {
+                    let grid = Array(size).fill(0).map(() => Array(size).fill(''));
+                    const directions = [[0, 1], [1, 0], [1, 1], [0, -1], [-1, 0], [-1, -1], [1, -1], [-1, 1]];
+                    for (const word of wordsToPlace) {
+                        let placed = false;
+                        for (let i = 0; i < 100; i++) { // Attempt 100 times
+                            const dir = directions[Math.floor(Math.random() * directions.length)];
+                            const row = Math.floor(Math.random() * size);
+                            const col = Math.floor(Math.random() * size);
+
+                            if (canPlaceWord(word, grid, row, col, dir)) {
+                                for (let j = 0; j < word.length; j++) {
+                                    grid[row + j * dir[0]][col + j * dir[1]] = word[j];
+                                }
+                                placed = true;
+                                break;
+                            }
+                        }
+                    }
+                    for (let r = 0; r < size; r++) { for (let c = 0; c < size; c++) { if (grid[r][c] === '') { grid[r][c] = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)]; } } }
+                    return grid;
+                }
+
+                function canPlaceWord(word, grid, row, col, dir) {
+                    const size = grid.length;
+                    for (let i = 0; i < word.length; i++) {
+                        const newRow = row + i * dir[0];
+                        const newCol = col + i * dir[1];
+                        if (newRow < 0 || newRow >= size || newCol < 0 || newCol >= size || (grid[newRow][newCol] !== '' && grid[newRow][newCol] !== word[i])) { return false; }
+                    }
+                    return true;
+                }
+
+                function renderGrid() {
+                    gridEl.innerHTML = '';
+                    for (let r = 0; r < gridSize; r++) { for (let c = 0; c < gridSize; c++) { const cell = document.createElement('div'); cell.textContent = grid[r][c]; cell.classList.add('grid-cell'); cell.dataset.row = r; cell.dataset.col = c; gridEl.appendChild(cell); } }
+                }
+
+                function renderWordList() { wordListEl.innerHTML = '<ul>' + words.map(word => `<li id="word-${word}">${word}</li>`).join('') + '</ul>'; }
+
+                function handleSelection(e) { if (!isSelecting) return; const cell = e.target.closest('.grid-cell'); if (cell && !selection.includes(cell)) { selection.push(cell); cell.classList.add('selecting'); } }
+                function startSelection(e) { isSelecting = true; selection = []; document.querySelectorAll('.grid-cell.selecting').forEach(c => c.classList.remove('selecting')); const cell = e.target.closest('.grid-cell'); if (cell) { selection.push(cell); cell.classList.add('selecting'); } }
+
+                function endSelection() {
+                    if (!isSelecting) return;
+                    isSelecting = false;
+                    let selectedWord = selection.map(cell => cell.textContent).join('');
+                    const reversedWord = selectedWord.split('').reverse().join('');
+                    
+                    if (words.includes(selectedWord) && !foundWords.includes(selectedWord)) {
+                        foundWords.push(selectedWord);
+                        markAsFound(selection, selectedWord);
+                    } else if (words.includes(reversedWord) && !foundWords.includes(reversedWord)) {
+                        foundWords.push(reversedWord);
+                        markAsFound(selection, reversedWord);
+                    } else {
+                         selection.forEach(cell => cell.classList.remove('selecting'));
+                    }
+                    checkWin();
+                }
+                
+                function markAsFound(selectedCells, word) { selectedCells.forEach(cell => { cell.classList.remove('selecting'); cell.classList.add('found'); }); document.getElementById(`word-${word}`).classList.add('found'); }
+                function checkWin() { if (foundWords.length === words.length) { winMessageEl.classList.remove('hidden'); } }
+                
+                function resetGame() {
+                    foundWords = [];
+                    winMessageEl.classList.add('hidden');
+                    grid = generateGrid(words, gridSize);
+                    renderGrid();
+                    renderWordList();
+                }
+
+                gridEl.addEventListener('mousedown', startSelection);
+                gridEl.addEventListener('mouseover', handleSelection);
+                document.addEventListener('mouseup', endSelection);
+                restartBtn.addEventListener('click', resetGame);
+
+                // Initial setup
+                resetGame();
             }
 
         });
